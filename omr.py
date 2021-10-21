@@ -6,11 +6,11 @@ from numpy.core.fromnumeric import std
 from numpy.lib.function_base import average
 import utils
 import tkinter.messagebox as tkmsgbox
-import AppKit
+#import AppKit
 import time
-sys.path.append('/opt/homebrew/Cellar/zbar')
-print(sys.path)
-from pyzbar.pyzbar import pyzbar
+#sys.path.append('/opt/homebrew/Cellar/zbar')
+#print(sys.path)
+from pyzbar import pyzbar
 
 imgHeight = 1920
 imgWidth = 1080
@@ -114,7 +114,8 @@ def scanImage(cap):
             imgWarpColored = cv2.warpPerspective(img, matrix, (imgHeight, imgWidth))
             lastDetected = True
         if (timer>=7):
-            AppKit.NSBeep()
+            print('\a')
+            #AppKit.NSBeep()
             return imgWarpColored
 
 def scanBack(cap):
