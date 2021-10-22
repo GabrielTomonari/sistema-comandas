@@ -5,7 +5,6 @@ from numpy.core.fromnumeric import std
 from numpy.lib.function_base import average
 import utils
 from pyzbar import pyzbar
-import beepy
 import tkinter.messagebox as tkmsgbox
 
 count = 0
@@ -67,7 +66,7 @@ priceList=[
     5,
     16
 ]
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 imgHeight = 1920
 imgWidth = 1080
 
@@ -191,7 +190,8 @@ while(1):
                         [imgBigContour, imgWarpColored, imgWarpGray, imgAdaptiveThre],[boxesArea,boxesAreaTresh,imgBlur,imgBlank])
 
             imgWarpColoredRotated = utils.show_choices(imgWarpColoredRotated,myChoices)
-            cv2.imshow("Scan", imgWarpColoredRotated)
+            imgWarpColoredRotated = cv2.resize(imgWarpColoredRotated,(400,700))
+            #cv2.imshow("Scan", imgWarpColoredRotated)
 
     else:
             lastDetected = False
@@ -204,19 +204,20 @@ while(1):
     #             "Warp Prespective", "Warp Gray", "Adaptive Threshold"]]
 
     stackedImage = utils.stackImages(imageArray, 1)
-    imgBigContour = cv2.rotate(imgBigContour,cv2.ROTATE_90_COUNTERCLOCKWISE)
+    stackedImage = cv2.resize(stackedImage,(imgHeight,imgWidth))
+    #imgBigContour = cv2.rotate(imgBigContour,cv2.ROTATE_90_COUNTERCLOCKWISE)
 
-    cv2.imshow("Result", imgRotated)
-    if (timer>=7):
-        print('\a')
-        #print (np.matrix(myChoices))
-        cv2.destroyAllWindows()
-        imgWarpColoredRotated = utils.show_choices(imgWarpColoredRotated,myChoices)
-        cv2.imshow("Scan", imgWarpColoredRotated)
-        #beepy.beep(sound="ping")
-        qtd = utils.count_total(myChoices)
-        utils.totalPrice(qtd,productsList,priceList)
-        break
+    cv2.imshow("Result", stackedImage)
+    # if (timer>=7):
+    #     print('\a')
+    #     #print (np.matrix(myChoices))
+    #     cv2.destroyAllWindows()
+    #     imgWarpColoredRotated = utils.show_choices(imgWarpColoredRotated,myChoices)
+    #     cv2.imshow("Scan", imgWarpColoredRotated)
+    #     #beepy.beep(sound="ping")
+    #     qtd = utils.count_total(myChoices)
+    #     utils.totalPrice(qtd,productsList,priceList)
+    #     break
 
 
     k = cv2.waitKey(30) & 0xff

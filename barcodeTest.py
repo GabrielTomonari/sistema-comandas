@@ -9,6 +9,8 @@ import time
 import winsound
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
+import re
+import easyocr
 
 
 imgHeight = 1920
@@ -70,7 +72,7 @@ priceList=[
 
 def scanTicket():
     # Initialize video capture
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
     ret, frame = cap.read()
     if frame is not None:
         #products = scanBack(cap)
@@ -89,7 +91,6 @@ def scanImage(cap):
     lastDetected = False
     timer=0
     while(1):
-        print("Escaneando imagem")
         ret, frame = cap.read()
         img = frame
         img = cv2.resize(img, (imgHeight, imgWidth))
@@ -131,68 +132,63 @@ def scanImage(cap):
             cv2.destroyAllWindows() 
             return imgWarpColored
 
-def scanBack(cap):
-    products = 25
-    choices = 10
-    img = scanImage(cap)
-    boxesArea = img.copy()
-    boxesArea = boxesArea[30:590, 210:1670]
-    boxesArea = cv2.resize(boxesArea,(imgHeight,imgWidth))
-
-    # APPLY ADAPTIVE THRESHOLD
-    boxesAreaGray = cv2.cvtColor(boxesArea, cv2.COLOR_BGR2GRAY)
-    boxesAreaTresh = cv2.threshold(boxesAreaGray,70, 255, cv2.THRESH_BINARY_INV)[1]
-    boxesAreaTreshRotated = cv2.rotate(boxesAreaTresh,cv2.ROTATE_90_CLOCKWISE)
-    boxes=utils.splitBoxes(boxesAreaTreshRotated)
-    
-    # COUNT NON ZERO PIXELS
-    myPixelVal = np.zeros((products,choices))
-    countC=0
-    countR=0
-
-    for box in boxes:
-        totalPixels = cv2.countNonZero(box)
-        myPixelVal[countR][countC] = totalPixels
-        countC+=1
-        if (countC==choices):
-            countR+=1
-            countC=0
-    #print(myPixelVal)
-        
-    myChoices=[]
-    myGeneralAverge = average(myPixelVal)
-    myGeneralDeviation = std(myPixelVal)
-    myGeneralAnswerThreshold = myGeneralDeviation*2
-    myGeneralUpperLimit = myGeneralAverge+myGeneralAnswerThreshold
-
-    for x in range(0,products):
-        arr = myPixelVal[x]
-        myAverage = average(arr)
-        myDeviation = std(arr)
-        myAnswerThreshold = myDeviation * 3
-        lowerLimit = myAverage - myAnswerThreshold
-        upperLimit = myAverage + myAnswerThreshold
-        answers = []
-        for y in arr:
-            if (y>=upperLimit or y>=myGeneralUpperLimit):
-                answers.append(1)
-            else:
-                answers.append(0)
-        myChoices.append(answers)
-
-    #qtd = utils.count_total(myChoices)
-    #utils.totalPrice(qtd,productsList,priceList)
-    for row in myChoices:
-        print(row,'\n')
+def trackChaned(x):
+    pass
 
 def scanFront(cap):
-    print("Teste")
+
+    reader = easyocr.Reader(['en'])
     img = scanImage(cap)
     img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
-    print(pytesseract.image_to_string(img))
-    cv2.imshow("img",img)
-    cv2.waitKey(15000)
+    img = cv2.resize(img,(400,800))
+    img = img[90:img.shape[0]-100, 0:img.shape[1]] 
+    result = reader.readtext(img) 
+    for line in result:
+        print(line)
+    # img_cropped_gray = cv2.cvtColor(img_cropped_resized, cv2.COLOR_BGR2GRAY)
+    # img_cropped_blur = cv2.medianBlur(img_cropped_gray,5)
+    # img_cropped_threshold = cv2.threshold(img_cropped_blur, 37, 255, cv2.THRESH_BINARY)[1]
+    # kernel = np.ones((1,1),np.uint8)
+    # img_cropped_dilated = cv2.dilate(img_cropped_threshold, kernel, iterations = 1)
+
+    #gray = cv2.cvtColor(img_cropped_resized, cv2.COLOR_RGB2GRAY)
+    # gray, img_bin = cv2.threshold(gray,128,255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    # gray = cv2.bitwise_not(img_bin)
+    # kernel = np.ones((2, 1), np.uint8)
+    # img = cv2.erode(gray, kernel, iterations=1)
+    # img = cv2.dilate(img, kernel, iterations=1)
+
+    imgGray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+    imgGray = cv2.medianBlur(imgGray,5)
+
+
+    cv2.namedWindow('Color Track Bar')
+    hh='Max'
+    hl='Min'
+    wnd = 'Colorbars'
+    cv2.createTrackbar("Max", "Color Track Bar",3,255,trackChaned)
+    cv2.createTrackbar("Min", "Color Track Bar",0,255,trackChaned)
+
+    while(True):
+        hul=cv2.getTrackbarPos("Max", "Color Track Bar")
+        if hul%2 == 0:
+            hul+=1 
+        #img_cropped = cv2.threshold(img_cropped_blur, 37, 255, cv2.THRESH_BINARY)[1]
+        #img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
+        #cv2.imwrite('test.jpg',img)
+        # imgAdaptiveThre = cv2.adaptiveThreshold(gray,255, 1, 1, 15, 5)
+        # imgAdaptiveThre = cv2.bitwise_not(imgAdaptiveThre)
+        # imgAdaptiveThre = cv2.medianBlur(imgAdaptiveThre, 11)
+        imgThresh = cv2.threshold(img,63,255,cv2.THRESH_BINARY)[1]
+        raw_text = pytesseract.image_to_string(imgThresh,config=r"--psm 6")
+        cv2.imshow("resultado",imgThresh)
+        cv2.waitKey(1)
         
-    
+        print(raw_text,'\n')
+        prices = re.findall("\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?", raw_text)
+        for price in prices:
+            print(price)
+        break
+    cv2.destroyAllWindows()
 scanTicket()
 
