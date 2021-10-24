@@ -9,6 +9,8 @@ import time
 import winsound
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:/Program Files/Tesseract-OCR/tesseract.exe'
+import re
+import easyocr
 
 
 imgHeight = 1920
@@ -70,16 +72,16 @@ priceList=[
 
 def scanTicket():
     # Initialize video capture
-    cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
     ret, frame = cap.read()
     if frame is not None:
-        #products = scanBack(cap)
-        #time.sleep(3) # Sleep for 3 seconds
-        scanFront(cap)
+        meals = scanFront(cap)
+        qt = scanBack(cap)
     else: 
         errorMessage()
     cap.release()
     cv2.destroyAllWindows()
+    return meals, qt
 
 def errorMessage():
     tkmsgbox.showinfo("Erro", "Erro: Câmera não detectada")
@@ -89,7 +91,7 @@ def scanImage(cap):
     lastDetected = False
     timer=0
     while(1):
-        print("Escaneando imagem")
+        #print("Escaneando imagem")
         ret, frame = cap.read()
         img = frame
         img = cv2.resize(img, (imgHeight, imgWidth))
@@ -182,17 +184,30 @@ def scanBack(cap):
 
     #qtd = utils.count_total(myChoices)
     #utils.totalPrice(qtd,productsList,priceList)
+    qt=[]
     for row in myChoices:
-        print(row,'\n')
+        row_qt = sum(row)
+        qt.append(row_qt)
+    
+    return qt
 
 def scanFront(cap):
-    print("Teste")
+    reader = easyocr.Reader(['en'])
     img = scanImage(cap)
     img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
-    print(pytesseract.image_to_string(img))
-    cv2.imshow("img",img)
-    cv2.waitKey(15000)
+    img = cv2.resize(img,(400,800))
+    img = img[90:img.shape[0]-100, 0:img.shape[1]]
+    imgGray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+    result = reader.readtext(imgGray,detail=0)
+    raw_text=""
+    for line in result:
+        raw_text = raw_text+" "+line
+
+    prices = re.findall("\d+[,.]\d+", raw_text)
+    meals=[]
+    for price in prices:
+        meals.append(price)
+    cv2.destroyAllWindows()
+    return meals
         
-    
-scanTicket()
 

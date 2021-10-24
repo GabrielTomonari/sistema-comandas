@@ -1,6 +1,7 @@
 # Import packages
 import tkinter as tk
 import makeSale
+import manageProducts
 
 
 def main():
@@ -24,7 +25,7 @@ def main():
     button1.place(relx=0.15, rely=0.5, anchor=tk.CENTER)
 
     bt2 = tk.PhotoImage(file="img/buttons/gerenciarProdutosBT.png")
-    button2 = tk.Button(window, text = 'Click Me !', image = bt2)
+    button2 = tk.Button(window, text = 'Click Me !', image = bt2,command=lambda : navigateNewWindow(window,manageProducts))
     #button2.pack(side=tk.LEFT,padx=10)
     button2.place(relx=0.38, rely=0.5, anchor=tk.CENTER)
 
@@ -41,7 +42,6 @@ def main():
     window.mainloop()
 
 def navigateNewWindow(currentWindow,newWindowFile):
-    currentWindow.destroy()
-    newWindowFile.open()
+    newWindowFile.open(currentWindow)
 
 main()

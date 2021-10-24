@@ -136,59 +136,23 @@ def trackChaned(x):
     pass
 
 def scanFront(cap):
-
     reader = easyocr.Reader(['en'])
     img = scanImage(cap)
     img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
     img = cv2.resize(img,(400,800))
     img = img[90:img.shape[0]-100, 0:img.shape[1]] 
-    result = reader.readtext(img) 
+    result = reader.readtext(img,detail=0)
+    raw_text=""
     for line in result:
-        print(line)
-    # img_cropped_gray = cv2.cvtColor(img_cropped_resized, cv2.COLOR_BGR2GRAY)
-    # img_cropped_blur = cv2.medianBlur(img_cropped_gray,5)
-    # img_cropped_threshold = cv2.threshold(img_cropped_blur, 37, 255, cv2.THRESH_BINARY)[1]
-    # kernel = np.ones((1,1),np.uint8)
-    # img_cropped_dilated = cv2.dilate(img_cropped_threshold, kernel, iterations = 1)
+        raw_text = raw_text+" "+line
 
-    #gray = cv2.cvtColor(img_cropped_resized, cv2.COLOR_RGB2GRAY)
-    # gray, img_bin = cv2.threshold(gray,128,255,cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-    # gray = cv2.bitwise_not(img_bin)
-    # kernel = np.ones((2, 1), np.uint8)
-    # img = cv2.erode(gray, kernel, iterations=1)
-    # img = cv2.dilate(img, kernel, iterations=1)
-
-    imgGray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
-    imgGray = cv2.medianBlur(imgGray,5)
-
-
-    cv2.namedWindow('Color Track Bar')
-    hh='Max'
-    hl='Min'
-    wnd = 'Colorbars'
-    cv2.createTrackbar("Max", "Color Track Bar",3,255,trackChaned)
-    cv2.createTrackbar("Min", "Color Track Bar",0,255,trackChaned)
-
-    while(True):
-        hul=cv2.getTrackbarPos("Max", "Color Track Bar")
-        if hul%2 == 0:
-            hul+=1 
-        #img_cropped = cv2.threshold(img_cropped_blur, 37, 255, cv2.THRESH_BINARY)[1]
-        #img = cv2.rotate(img,cv2.ROTATE_90_CLOCKWISE)
-        #cv2.imwrite('test.jpg',img)
-        # imgAdaptiveThre = cv2.adaptiveThreshold(gray,255, 1, 1, 15, 5)
-        # imgAdaptiveThre = cv2.bitwise_not(imgAdaptiveThre)
-        # imgAdaptiveThre = cv2.medianBlur(imgAdaptiveThre, 11)
-        imgThresh = cv2.threshold(img,63,255,cv2.THRESH_BINARY)[1]
-        raw_text = pytesseract.image_to_string(imgThresh,config=r"--psm 6")
-        cv2.imshow("resultado",imgThresh)
-        cv2.waitKey(1)
-        
-        print(raw_text,'\n')
-        prices = re.findall("\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?", raw_text)
-        for price in prices:
-            print(price)
-        break
+    # imgGray = cv2.cvtColor(img,cv2.COLOR_RGB2GRAY)
+    # imgGray = cv2.medianBlur(imgGray,5)
+    # imgThresh = cv2.threshold(img,63,255,cv2.THRESH_BINARY)[1]
+    
+    prices = re.findall("\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?", raw_text)
+    for price in prices:
+        print(price)
     cv2.destroyAllWindows()
 scanTicket()
 
